@@ -1,0 +1,1 @@
+# para las funciones de distancia: Heuclidean, Manhattan, Minkowski, Sentence similarity
