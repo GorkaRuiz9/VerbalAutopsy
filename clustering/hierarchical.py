@@ -35,9 +35,23 @@ class AgglomerativeClustering:
         self.clusters.append(new_cluster)
         self.clusters_history.append(new_cluster)
         
-    def get_clusters(self, dist_to_cut):
+    def cut_tree(self, dist_to_cut):
+        if not self.clusters_history:
+            return []
+        top = self.clusters_history[-1]
+        return self.get_clusters(top, dist_to_cut)
+    
+    def get_clusters(self, cluster, dist_to_cut):
         
-        return None
+        if cluster.left == None and cluster.right == None:
+            return [cluster]
+        if cluster.distance <= dist_to_cut:
+            return [cluster]
+        else:
+            clusters = list()
+            clusters += self.get_clusters(cluster.left, dist_to_cut)
+            clusters += self.get_clusters(cluster.right, dist_to_cut)
+            return clusters
 
 
 class ClusterNode:
