@@ -18,25 +18,20 @@ def limpiar_texto(t):
 
 
 def generar_embeddings(csv_path, text_col="gs_text34"):
-
+    """ Devuelve un diccionario {palabra: vector}."""
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"Archivo no encontrado: {csv_path}")
 
-    # Leer dataset
     df = pd.read_csv(csv_path)
     if text_col not in df.columns:
         raise ValueError(f"Columna '{text_col}' no encontrada en CSV.")
 
-  
     texts = df[text_col].dropna().astype(str).tolist()
     tokenized_docs = [limpiar_texto(t) for t in texts]
 
-    # Crear vocabulario
     vocabulario = sorted(set([word for doc in tokenized_docs for word in doc]))
-    # Inicializar vetcores aleatorios
     embeddings = {word: np.random.uniform(-0.5, 0.5, embedding_dim) for word in vocabulario}
 
-    # Entrenamiento simple basado en coocurrencias
     for doc in tokenized_docs:
         for i, word in enumerate(doc):
             context = doc[max(0, i - window_size): i] + doc[i + 1: i + 1 + window_size]
@@ -46,39 +41,46 @@ def generar_embeddings(csv_path, text_col="gs_text34"):
     return embeddings
 
 
-def cosine_sim(v1, v2):
-    """Similitud coseno entre dos vectores."""
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+def frase_a_vector(frase, embeddings, dim=50):
+    """Convierte una frase en un vector promediando los embeddings de sus palabras. Palabras desconocidas se representan con vector cero."""
+    tokens = limpiar_texto(frase)
+    vectores = []
+    for tok in tokens:
+        if tok in embeddings:
+            vectores.append(embeddings[tok])
+        else:
+            vectores.append(np.zeros(dim))
 
-def cargar_embeddings_csv(csv_path):
-    """Carga embeddings guardados en CSV y devuelve diccionario {palabra: vector}."""
-    embeddings = {}
-    with open(csv_path, newline="") as f:
-        reader = csv.reader(f)
-        header = next(reader)
-        for row in reader:
-            word = row[0]
-            vector = [float(x) for x in row[1:]]
-            embeddings[word] = vector
-    return embeddings
+    if len(vectores) == 0:
+        return np.zeros(dim)
+    else:
+        return np.mean(vectores, axis=0)
 
 
-# Código de prueba
+# --- Código principal ---
 if __name__ == "__main__":
     csv_path = "cleaned_PHMRC_VAI_redacted_free_text.train.csv"
+
+    # Leer dataset
+    df = pd.read_csv(csv_path)
+
+    # Verificar que exista la columna newid
+    if "newid" not in df.columns:
+        raise ValueError("El CSV no contiene la columna 'newid'.")
+
+    # Generar embeddings de palabras
     embeddings = generar_embeddings(csv_path)
 
-    # Guardar en CSV
-    output_csv = "embeddings.csv"
-    with open(output_csv, "w", newline="") as f:
+    # CSV de embeddings por instancia
+    output_csv_instances = "instances_embeddings.csv"
+    with open(output_csv_instances, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["word"] + [f"dim_{i}" for i in range(50)])
-        for word, vec in embeddings.items():
-            writer.writerow([word] + vec.tolist())
-          
+        writer.writerow(["newid"] + [f"dim_{i}" for i in range(embedding_dim)])
 
-    w1, w2 = "pneumonia", "fever"
-    if w1 in embeddings and w2 in embeddings:
-        sim = cosine_sim(embeddings[w1], embeddings[w2])
-        print(f"Similitud entre '{w1}' y '{w2}': {sim:.4f}")
-    print(f"Embedding de '{w1}': {embeddings[w1]}")
+        for idx, row in df.iterrows():
+            instance_id = row["newid"]
+            text = str(row["gs_text34"])  # texto de la fila
+            vector_inst = frase_a_vector(text, embeddings)
+            writer.writerow([instance_id] + vector_inst.tolist())
+
+    print(f"Embeddings de instancias guardados en '{output_csv_instances}'")
