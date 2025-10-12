@@ -1,7 +1,6 @@
 # implementacion de la clase AgglomerativeClustering
-import pandas
+import pandas as pd
 from utils import *
-import numpy as np
 import copy
 
 class AgglomerativeClustering:
@@ -13,7 +12,8 @@ class AgglomerativeClustering:
         self.clusters_history = list()
         self.labels_ = None
 
-    def fit(self, data_set: pandas.DataFrame):
+
+    def fit(self, data_set: pd.DataFrame):
         # contruye el dendograma a partir del dataset
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
@@ -24,9 +24,7 @@ class AgglomerativeClustering:
             clusterA = self.clusters[i]
             clusterB = self.clusters[j]
             self.update_clusters_list(clusterA, clusterB, min_dist)
-            
-        return None
-            
+
             
     def update_clusters_list(self, clusterA, clusterB, min_dist):
         new_cluster = ClusterNode(clusterA, clusterB, min_dist, clusterA.datos + clusterB.datos, len(self.clusters_history))
@@ -35,11 +33,14 @@ class AgglomerativeClustering:
         self.clusters.append(new_cluster)
         self.clusters_history.append(new_cluster)
         
+        
     def cut_tree(self, dist_to_cut):
         if not self.clusters_history:
             return []
         top = self.clusters_history[-1]
-        return self.get_clusters(top, dist_to_cut)
+        clusters = self.get_clusters(top, dist_to_cut)
+        return get_results_df(clusters)
+    
     
     def get_clusters(self, cluster, dist_to_cut):
         
@@ -60,4 +61,39 @@ class ClusterNode:
         self.right = right        
         self.distance = distance  
         self.datos = datos    
-        self.id = id              
+        self.id = id
+        
+    def __str__(self):
+        return f"Cluster: {self.id} [{self.datos}]"
+        
+
+
+#=====Pruebas======#
+if __name__ == "__main__":
+    
+    data = [
+    [1.0, 2.0],
+    [1.5, 1.8],
+    [30.0, 50.0],
+    [11.0, 11.0],
+    [1.0, 0.6],
+    [9.0, 11.0],
+    [8.0, 19.0],
+    [10.0, 20.0],
+    [45.0, 35.0],
+    [0.0, 1.0]
+    ]
+    
+    df = pd.DataFrame(data, columns=["atrib1", "atrib2"])
+
+    print(df)
+    
+    clustering = AgglomerativeClustering(linkage="average", metric="euclidean")
+    clustering.fit(df)
+
+    # Por ejemplo, cortar a distancia 5.0
+    clusters_result = clustering.cut_tree(dist_to_cut=5.0)
+    print(type(clusters_result))
+    print("=========Fin Pruebas============")
+    print()
+    
