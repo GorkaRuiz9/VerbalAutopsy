@@ -1,7 +1,7 @@
 # Para funciones complementarias
 import numpy as np
 import pandas
-from linkage import *
+from distances import inter_group_distance
 import math
 
 def calcular_distancias(clusters, linkage, metric, p):
