@@ -1,0 +1,5 @@
+- dibujar arbol
+- embeddings con transformaers (multilingue o mono) y dominio general o medico
+- elegir numero de clusters, pca, transformer
+- sacar centroides
+- cambiar la instancia nueva a la misma dimesion y formato que el dataset original

@@ -1,1 +1,0 @@
-# para las funciones de enlace: MeanLink, SimpleLink, CompleteLink, AverageLink

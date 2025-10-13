@@ -1,4 +1,3 @@
-# implementacion de la clase AgglomerativeClustering
 import pandas as pd
 from utils import *
 import copy
@@ -12,6 +11,7 @@ class AgglomerativeClustering:
         self.clusters_history = list()
         self.data_set = None
         self.labels_ = None
+        self.centroids = None
 
 
     def fit(self, data_set: pd.DataFrame):
@@ -25,7 +25,14 @@ class AgglomerativeClustering:
             clusterA = self.clusters[i]
             clusterB = self.clusters[j]
             self.update_clusters_list(clusterA, clusterB, min_dist)
-
+            
+    
+    def predict(self, data_set: pd.DataFrame):
+        return None
+    
+    
+    def get_centroids(self, clusters):
+        return None
             
     def update_clusters_list(self, clusterA, clusterB, min_dist):
         new_cluster = ClusterNode(clusterA, clusterB, min_dist, clusterA.datos + clusterB.datos, len(self.clusters_history))
@@ -40,6 +47,7 @@ class AgglomerativeClustering:
             return []
         top = self.clusters_history[-1]
         clusters = self.get_clusters(top, dist_to_cut)
+        self.centroids = self.get_centroids(clusters)
         return get_results_df(clusters, self.data_set)
     
     
