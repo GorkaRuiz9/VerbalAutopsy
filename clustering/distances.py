@@ -8,57 +8,38 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Distancia entre instancias
 
 def heuclidean_distance(x, y):
-    """
-    Distancia Euclidiana (Heuclidean).
-    """
     x, y = np.array(x), np.array(y)
     return np.sqrt(np.sum((x - y) ** 2))
 
 
 def manhattan_distance(x, y):
-    """
-    Distancia Manhattan (L1).
-    """
     x, y = np.array(x), np.array(y)
     return np.sum(np.abs(x - y))
 
 
 def minkowski_distance(x, y, p=2):
-    """
-    Distancia de Minkowski general.
-    p=1 -> Manhattan, p=2 -> Euclidiana, p>2 otras variantes.
-    """
     x, y = np.array(x), np.array(y)
     return np.sum(np.abs(x - y) ** p) ** (1 / p)
 
 
 def sentence_similarity(embedding_a, embedding_b):
-    """
-    Similitud coseno entre dos embeddings (valores entre 0 y 1).
-    """
     sim = cosine_similarity([embedding_a], [embedding_b])[0][0]
     return sim
 
 
 def sentence_distance(embedding_a, embedding_b):
-    """
-    Convierte la similitud coseno en una distancia (0 = iguales, 1 = distintas).
-    """
     return 1 - sentence_similarity(embedding_a, embedding_b)
 
 
 # Distancia entre clusters
 
 def inter_group_distance(cluster_a, cluster_b, linkage='single', metric='euclidean', p=2):
-    """
-    Calcula la distancia entre dos clusters según el tipo de linkage y métrica.
-
-    Parámetros:
-    - cluster_a, cluster_b: arrays o listas con las instancias de cada cluster
-    - linkage: 'single', 'complete', 'average', 'mean'
-    - metric: 'euclidean', 'manhattan', 'minkowski', 'sentence'
-    - p: parámetro para Minkowski (solo si metric='minkowski')
-    """
+    #Parámetros:
+    #- cluster_a, cluster_b: arrays o listas con las instancias de cada cluster
+    #- linkage: 'single', 'complete', 'average', 'mean'
+    #- metric: 'euclidean', 'manhattan', 'minkowski', 'sentence'
+    #- p: parámetro para Minkowski (solo si metric='minkowski')
+    
 
     # Selección de la métrica base
     if metric == 'euclidean':
@@ -93,11 +74,11 @@ def inter_group_distance(cluster_a, cluster_b, linkage='single', metric='euclide
 # Pruebas
 
 if __name__ == "__main__":
-    # --- Datos numéricos ---
+    # Datos numéricos
     cluster1 = np.array([[1, 2], [2, 3], [3, 3]])
     cluster2 = np.array([[6, 5], [7, 8], [8, 6]])
 
-    print("---- Distancias numéricas ----")
+    print("Distancias numéricas")
     print("Euclidean:", heuclidean_distance([1, 2], [4, 6]))
     print("Manhattan:", manhattan_distance([1, 2], [4, 6]))
     print("Minkowski (p=3):", minkowski_distance([1, 2], [4, 6], p=3))
@@ -106,8 +87,8 @@ if __name__ == "__main__":
         d = inter_group_distance(cluster1, cluster2, linkage=link, metric='euclidean')
         print(f"Inter-grupal ({link}, euclidean): {d:.4f}")
 
-    # --- Datos de texto (embeddings simulados) ---
-    print("\n---- Distancias semánticas ----")
+    # Datos de texto (embeddings simulados)
+    print("\nDistancias semánticas")
     emb1 = np.array([0.2, 0.3, 0.9])
     emb2 = np.array([0.25, 0.4, 0.85])
     emb3 = np.array([-0.1, 0.0, 0.1])
