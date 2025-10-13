@@ -34,12 +34,11 @@ def sentence_distance(embedding_a, embedding_b):
 # Distancia entre clusters
 
 def inter_group_distance(cluster_a, cluster_b, linkage='single', metric='euclidean', p=2):
-    #Parámetros:
-    #- cluster_a, cluster_b: arrays o listas con las instancias de cada cluster
-    #- linkage: 'single', 'complete', 'average', 'mean'
-    #- metric: 'euclidean', 'manhattan', 'minkowski', 'sentence'
-    #- p: parámetro para Minkowski (solo si metric='minkowski')
-    
+    # Parámetros:
+    # - cluster_a, cluster_b: arrays o listas con las instancias de cada cluster
+    # - linkage: 'single', 'complete', 'average', 'mean'
+    # - metric: 'euclidean', 'manhattan', 'minkowski', 'sentence'
+    # - p: parámetro para Minkowski (solo si metric='minkowski')
 
     # Selección de la métrica base
     if metric == 'euclidean':
@@ -70,6 +69,55 @@ def inter_group_distance(cluster_a, cluster_b, linkage='single', metric='euclide
     else:
         raise ValueError("linkage debe ser: 'single', 'complete', 'average' o 'mean'")
 
+def intra_group_distance(cluster, metric='euclidean', p=2, mode='mean'):
+    #Parámetros:
+    #- cluster: array o lista de instancias (vectores o embeddings)
+    #- metric: 'euclidean', 'manhattan', 'minkowski', 'sentence'
+    #- p: parámetro de Minkowski (solo si metric='minkowski')
+    #- mode: 'mean' (promedio de distancias al centroide),
+    #        'pairs' (promedio entre todas las parejas),
+    #        'max' (distancia máxima interna)
+
+    cluster = np.array(cluster)
+
+    # Selección de la métrica base
+    if metric == 'euclidean':
+        base_distance = heuclidean_distance
+    elif metric == 'manhattan':
+        base_distance = manhattan_distance
+    elif metric == 'minkowski':
+        base_distance = lambda a, b: minkowski_distance(a, b, p)
+    elif metric == 'sentence':
+        base_distance = sentence_distance
+    else:
+        raise ValueError("metric debe ser: 'euclidean', 'manhattan', 'minkowski' o 'sentence'")
+
+    # Modo 1: promedio de distancias al centroide
+    if mode == 'mean':
+        centroid = np.mean(cluster, axis=0)
+        distances = [base_distance(x, centroid) for x in cluster]
+        return np.mean(distances)
+
+    # Modo 2: promedio de distancias entre todos los pares del cluster
+    elif mode == 'pairs':
+        if len(cluster) < 2:
+            return 0.0
+        from itertools import combinations
+        distances = [base_distance(a, b) for a, b in combinations(cluster, 2)]
+        return np.mean(distances)
+
+    # Modo 3: distancia máxima (diámetro del cluster)
+    elif mode == 'max':
+        if len(cluster) < 2:
+            return 0.0
+        from itertools import combinations
+        distances = [base_distance(a, b) for a, b in combinations(cluster, 2)]
+        return np.max(distances)
+
+    else:
+        raise ValueError("mode debe ser: 'mean', 'pairs' o 'max'")
+
+
 
 # Pruebas
 
@@ -99,3 +147,6 @@ if __name__ == "__main__":
     for link in ['single', 'complete', 'average', 'mean']:
         d = inter_group_distance(clusterA, clusterB, linkage=link, metric='sentence')
         print(f"Inter-grupal ({link}, sentence): {d:.4f}")
+
+    print("Mean:", intra_group_distance(clusterA, metric='sentence', mode='mean'))
+    print("Pairs:", intra_group_distance(clusterB, metric='sentence', mode='pairs'))
