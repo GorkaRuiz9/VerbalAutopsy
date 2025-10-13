@@ -4,7 +4,7 @@ from itertools import combinations
 from math import isclose
 
 
-from distances import heuclidean_distance, manhattan_distance, minkowski_distance, sentence_distance, inter_group_distance
+from distances import heuclidean_distance, manhattan_distance, minkowski_distance, sentence_distance, inter_group_distance, intra_group_distance
 
 
 def load_dataset(path, id_col=None, cluster_col=None):
@@ -56,44 +56,10 @@ def load_dataset(path, id_col=None, cluster_col=None):
 
     return ids, labels, embeddings
 
-def load_centroids(path, cluster_col=None):
+
+def compute_cohesion(embeddings, labels, metric='euclidean', p=2, mode='mean'):
     """
-    Carga un dataset de centroides.
-
-    Parámetros
-    ----------
-    path : str
-        Ruta del archivo CSV.
-    cluster_col : str o int, opcional
-        Nombre o índice de la columna que contiene el número de cluster.
-
-    Retorna
-    -------
-    centroids : dict
-        Diccionario {cluster_label: np.ndarray(embedding)}.
-    """
-
-    df = pd.read_csv(path)
-
-    # Convertir nombre de columna a índice si hace falta
-    if isinstance(cluster_col, str):
-        cluster_col = df.columns.get_loc(cluster_col)
-
-    # Extraer labels
-    labels = df.iloc[:, cluster_col].values.astype(int)
-
-    # Quitar columna del cluster para quedarnos solo con embeddings
-    emb_df = df.drop(columns=[df.columns[cluster_col]])
-    embeddings = emb_df.values.astype(float)
-
-    # Construir diccionario {cluster_label: vector}
-    centroids = {int(lbl): embeddings[i] for i, lbl in enumerate(labels)}
-
-    return centroids
-
-def compute_cohesion(embeddings, labels, centroids=None, squared=False, metric='euclidean', p=2):
-    """
-    Calcula la cohesión de cada cluster y global con distintas métricas de distancia.
+    Calcula la cohesión de cada cluster y la cohesión global usando la función intra_group_distance().
 
     Parámetros
     ----------
@@ -101,73 +67,59 @@ def compute_cohesion(embeddings, labels, centroids=None, squared=False, metric='
         Matriz (n_samples, n_features) con los embeddings.
     labels : np.ndarray
         Vector (n_samples,) con el número de cluster asignado a cada instancia.
-    centroids : dict, opcional
-        Diccionario {cluster_label: embedding_vector}. Si no se pasa, se calcula.
-    squared : bool, opcional
-        Si True, devuelve distancias al cuadrado (solo válido para métricas numéricas).
     metric : str
         'euclidean', 'manhattan', 'minkowski', 'sentence'
     p : int
-        Parámetro de Minkowski.
+        Parámetro de Minkowski (si metric='minkowski').
+    mode : str
+        'mean'  -> promedio de distancias al centroide (default)
+        'pairs' -> promedio entre todas las parejas del cluster
+        'max'   -> distancia máxima interna (diámetro del cluster)
     """
-    # Selección de función de distancia
-    if metric == 'euclidean':
-        base_distance = heuclidean_distance
-    elif metric == 'manhattan':
-        base_distance = manhattan_distance
-    elif metric == 'minkowski':
-        base_distance = lambda a, b: minkowski_distance(a, b, p=p)
-    elif metric == 'sentence':
-        base_distance = sentence_distance
-    else:
-        raise ValueError("metric debe ser 'euclidean', 'manhattan', 'minkowski' o 'sentence'")
-
     unique_clusters = np.unique(labels)
-    n = embeddings.shape[0]
     per_cluster = {}
-    total_sum = 0.0
+    total_weighted_sum = 0.0
+    total_points = embeddings.shape[0]
 
     for cluster in unique_clusters:
         mask = (labels == cluster)
         cluster_points = embeddings[mask]
-        if cluster_points.shape[0] == 0:
+
+        if len(cluster_points) == 0:
             continue
 
-        # Calcular centroid si no se proporciona
-        centroid = centroids[cluster] if centroids and cluster in centroids else cluster_points.mean(axis=0)
-
-        # Calcular distancias del cluster a su centroide
-        dists = np.array([base_distance(x, centroid) for x in cluster_points])
-        dists_sq = dists**2
-
+        cohesion_value = intra_group_distance(cluster_points, metric=metric, p=p, mode=mode)
         per_cluster[cluster] = {
-            "size": cluster_points.shape[0],
-            "mean_distance": float(dists.mean()),
-            "mean_squared_distance": float(dists_sq.mean())
+            "size": len(cluster_points),
+            "cohesion": float(cohesion_value)
         }
 
-        total_sum += (dists_sq.mean() if squared else dists.mean()) * cluster_points.shape[0]
+        total_weighted_sum += cohesion_value * len(cluster_points)
 
-    overall = total_sum / n
+    overall = total_weighted_sum / total_points if total_points > 0 else 0.0
+
     return per_cluster, overall
 
 
 
-def compute_separability(centroids, metric='euclidean', p=2, linkage='mean'):
+
+def compute_separability(embeddings, labels, metric='euclidean', p=2, linkage='mean'):
     """
-    Calcula la separabilidad entre centroides según la métrica elegida,
+    Calcula la separabilidad entre clusters según la métrica elegida,
     utilizando inter_group_distance() para garantizar consistencia.
 
     Parámetros
     ----------
-    centroids : dict
-        Diccionario {cluster_label: embedding_vector}.
+    embeddings : np.ndarray (n_samples, n_features)
+        Matriz con todos los embeddings.
+    labels : np.ndarray (n_samples,)
+        Vector con la asignación de cluster para cada instancia.
     metric : str
         'euclidean', 'manhattan', 'minkowski', 'sentence'
     p : int
-        Parámetro de Minkowski (si aplica).
+        Parámetro de Minkowski si aplica.
     linkage : str
-        Tipo de enlace a usar en inter_group_distance ('mean', 'single', 'complete', 'average').
+        Tipo de enlace para inter_group_distance ('mean', 'single', 'complete', 'average').
 
     Retorna
     -------
@@ -180,8 +132,8 @@ def compute_separability(centroids, metric='euclidean', p=2, linkage='mean'):
             "k": int
         }
     """
-    labels = sorted(centroids.keys())
-    k = len(labels)
+    unique_clusters = np.unique(labels)
+    k = len(unique_clusters)
     if k < 2:
         return {
             "pairwise_matrix": None,
@@ -191,24 +143,26 @@ def compute_separability(centroids, metric='euclidean', p=2, linkage='mean'):
             "k": k
         }
 
+    # Extraer puntos de cada cluster
+    clusters = {c: embeddings[labels == c] for c in unique_clusters}
+
     # Crear matriz de distancias
     pairwise = np.zeros((k, k))
 
-    for i, a in enumerate(labels):
-        for j, b in enumerate(labels):
+    for i, ci in enumerate(unique_clusters):
+        for j, cj in enumerate(unique_clusters):
             if i == j:
                 pairwise[i, j] = 0.0
             else:
-                # inter_group_distance espera arrays/lists de instancias → pasamos cada centroide como [vector]
                 pairwise[i, j] = inter_group_distance(
-                    [np.asarray(centroids[a])],
-                    [np.asarray(centroids[b])],
+                    clusters[ci],
+                    clusters[cj],
                     linkage=linkage,
                     metric=metric,
                     p=p
                 )
 
-    # Extraer los valores únicos de la parte superior (sin duplicar)
+    # Extraer valores únicos de la parte superior para estadísticas
     upper_vals = np.array([pairwise[i, j] for i, j in combinations(range(k), 2)])
 
     return {
@@ -271,7 +225,6 @@ def main():
     # ---------------- Configuración ----------------
     config = {
         "instances_path": "instances.csv",   # ruta de dataset con embeddings
-        "centroids_path": "centroids.csv",   # ruta de centroides
         "id_col": "id",                      # columna de ID (nombre o índice)
         "cluster_col": "cluster"             # columna de cluster (nombre o índice)
     }
@@ -283,28 +236,31 @@ def main():
         cluster_col=config["cluster_col"]
     )
 
-    centroids = load_centroids(
-        path=config["centroids_path"],
-        cluster_col=config["cluster_col"]
-    )
-
     print("\n Datos cargados correctamente")
-    print(f"Instancias: {len(ids)}, Dimensión embeddings: {embeddings.shape[1]}, Clusters: {len(centroids)}")
+    print(f"Instancias: {len(ids)}, Dimensión embeddings: {embeddings.shape[1]}")
 
     # ---------------- Cohesión ----------------
     per_cluster_cohesion, cohesion_global = compute_cohesion(
-        embeddings, labels, centroids=centroids, squared=False, metric="euclidean"
+        embeddings=embeddings,
+        labels=labels,
+        metric="euclidean",
+        p=2,
+        mode="mean"
     )
+
     print("\n=== Cohesión por cluster ===")
     for cluster, stats in per_cluster_cohesion.items():
-        print(f"Cluster {cluster}: size={stats['size']}, mean_distance={stats['mean_distance']:.4f}, mean_squared_distance={stats['mean_squared_distance']:.4f}")
-    print(f"Cohesión global: {cohesion_global:.4f}")
+        print(f"Cluster {cluster}: size={stats['size']}, cohesion={stats['cohesion']:.4f}")
+
+    print(f"\nCohesión global: {cohesion_global:.4f}")
 
     # ---------------- Separabilidad ----------------
-    separability = compute_separability(centroids, metric="euclidean")
-    print("\n=== Separabilidad entre centroides ===")
-    print(f"n_clusters = {separability['k']}, mean pairwise centroid distance = {separability['mean_pairwise']:.4f}")
+    separability = compute_separability(embeddings, labels, metric="euclidean", linkage='mean')
+
+    print("\n=== Separabilidad entre clusters ===")
+    print(f"n_clusters = {separability['k']}, mean pairwise distance = {separability['mean_pairwise']:.4f}")
     print(f"min = {separability['min_pairwise']:.4f}, max = {separability['max_pairwise']:.4f}")
+
 
     # ---------------- Silhouette ----------------
     sil_global, sil_per_cluster = compute_silhouette(embeddings, labels, metric="euclidean")

@@ -1,9 +1,7 @@
-# para las funciones de distancia: Heuclidean, Manhattan, Minkowski, Sentence similarity
-
 import numpy as np
 from itertools import product
 from sklearn.metrics.pairwise import cosine_similarity
-
+from itertools import combinations
 
 # Distancia entre instancias
 
@@ -102,7 +100,6 @@ def intra_group_distance(cluster, metric='euclidean', p=2, mode='mean'):
     elif mode == 'pairs':
         if len(cluster) < 2:
             return 0.0
-        from itertools import combinations
         distances = [base_distance(a, b) for a, b in combinations(cluster, 2)]
         return np.mean(distances)
 
@@ -110,7 +107,6 @@ def intra_group_distance(cluster, metric='euclidean', p=2, mode='mean'):
     elif mode == 'max':
         if len(cluster) < 2:
             return 0.0
-        from itertools import combinations
         distances = [base_distance(a, b) for a, b in combinations(cluster, 2)]
         return np.max(distances)
 
