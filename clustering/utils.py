@@ -19,20 +19,28 @@ def get_min_dist(distancias):
     min_dist = arr[i, j]
     return min_dist, (i, j)
 
-def get_results_df(clusters):
+def get_results_df(clusters, data_set: pd.DataFrame):
     filas = []
 
     for cluster in clusters:
         for instancia in cluster.datos:
-            fila = [None] + list(instancia) + [cluster.id]  # None temporal para id
+            fila = list(instancia) + [cluster.id]
             filas.append(fila)
 
-    # crear dataframe
-    num_atributos = len(clusters[0].datos[0])
-    columnas = ["id"] + [f"atrib{i+1}" for i in range(num_atributos)] + ["id_cluster"]
+    columnas = list(data_set.columns) + ["cluster"]
     df = pd.DataFrame(filas, columns=columnas)
 
-    # asignar id único por fila
-    df["id"] = range(len(df))
+    df.insert(0, "id", None)
+    for i, row in df.iterrows():
+        # buscamos la instancia original en data_set
+        mask = (data_set == row[data_set.columns]).all(axis=1)
+        match = data_set[mask]
+        if not match.empty:
+            df.at[i, "id"] = match.index[0]
+        else:
+            df.at[i, "id"] = -1  # por si no se encuentra coincidencia exacta
+
+    df = df.sort_values(by="id").reset_index(drop=True)
+    
     print(df)
     return df

@@ -10,11 +10,12 @@ class AgglomerativeClustering:
         self.p = minkowski_p
         self.clusters = list()
         self.clusters_history = list()
+        self.data_set = None
         self.labels_ = None
 
 
     def fit(self, data_set: pd.DataFrame):
-        # contruye el dendograma a partir del dataset
+        self.data_set = data_set
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
         
@@ -39,7 +40,7 @@ class AgglomerativeClustering:
             return []
         top = self.clusters_history[-1]
         clusters = self.get_clusters(top, dist_to_cut)
-        return get_results_df(clusters)
+        return get_results_df(clusters, self.data_set)
     
     
     def get_clusters(self, cluster, dist_to_cut):
@@ -93,7 +94,6 @@ if __name__ == "__main__":
 
     # Por ejemplo, cortar a distancia 5.0
     clusters_result = clustering.cut_tree(dist_to_cut=5.0)
-    print(type(clusters_result))
     print("=========Fin Pruebas============")
     print()
     
