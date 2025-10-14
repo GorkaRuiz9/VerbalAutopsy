@@ -83,6 +83,9 @@ class AgglomerativeClustering:
             clusters += self.get_clusters(cluster.left, dist_to_cut)
             clusters += self.get_clusters(cluster.right, dist_to_cut)
             return clusters
+        
+    def view_dendrogram(self):
+        plt_dendrogram(self.clusters_history)
 
 
 class ClusterNode:
@@ -98,7 +101,7 @@ class ClusterNode:
         
 
 
-#=====Pruebas======#
+#=====Pruebas=====#
 if __name__ == "__main__":
     
     data = [
@@ -133,6 +136,9 @@ if __name__ == "__main__":
     clusters_result = clustering.cut_tree(dist_to_cut=5.0)
     print("###Centroides###")
     print(clustering.centroides)
+    
+    print("###Dendograma###")
+    print(clustering.view_dendrogram())    
 
     df_test = pd.DataFrame(data_test, columns=["atrib1", "atrib2"])
     print("###Dataset de test###")
