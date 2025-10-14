@@ -1,6 +1,7 @@
 import pandas as pd
 from utils import *
 import copy
+import distances
 
 class AgglomerativeClustering:
     def __init__(self, linkage="average", metric="euclidean", minkowski_p=3):
@@ -11,7 +12,7 @@ class AgglomerativeClustering:
         self.clusters_history = list()
         self.data_set = None
         self.labels_ = None
-        self.centroids = None
+        self.centroides = None
 
 
     def fit(self, data_set: pd.DataFrame):
@@ -28,11 +29,31 @@ class AgglomerativeClustering:
             
     
     def predict(self, data_set: pd.DataFrame):
-        return None
-    
-    
-    def get_centroids(self, clusters):
-        return None
+        
+        centroides_items = list(self.centroides.items())
+        
+        asignaciones = []
+        for i, instancia in data_set.iterrows():
+            x = np.array(instancia.values, dtype=float)
+            
+            distancias = [distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
+            
+            id_cluster = centroides_items[int(np.argmin(distancias))][0]
+            asignaciones.append(id_cluster)
+
+        resultado = data_set.copy()
+        resultado["cluster"] = asignaciones
+        
+        return resultado
+        
+        
+    def set_centroids(self, clusters):
+        centroides = {}
+        for cluster in clusters:
+            datos = np.array(cluster.datos)
+            centroide = np.mean(datos, axis=0)
+            centroides[cluster.id] = centroide
+        return centroides
             
     def update_clusters_list(self, clusterA, clusterB, min_dist):
         new_cluster = ClusterNode(clusterA, clusterB, min_dist, clusterA.datos + clusterB.datos, len(self.clusters_history))
@@ -47,7 +68,7 @@ class AgglomerativeClustering:
             return []
         top = self.clusters_history[-1]
         clusters = self.get_clusters(top, dist_to_cut)
-        self.centroids = self.get_centroids(clusters)
+        self.centroides = self.set_centroids(clusters)
         return get_results_df(clusters, self.data_set)
     
     
@@ -93,8 +114,16 @@ if __name__ == "__main__":
     [0.0, 1.0]
     ]
     
+    data_test = [
+    [2.0, 1.0],
+    [2.0, 2.0],
+    [35.0, 50.0],
+    [10.0, 10.0]
+    ]
+    
     df = pd.DataFrame(data, columns=["atrib1", "atrib2"])
 
+    print("###Dataset de train###")
     print(df)
     
     clustering = AgglomerativeClustering(linkage="average", metric="euclidean")
@@ -102,6 +131,14 @@ if __name__ == "__main__":
 
     # Por ejemplo, cortar a distancia 5.0
     clusters_result = clustering.cut_tree(dist_to_cut=5.0)
-    print("=========Fin Pruebas============")
-    print()
+    print("###Centroides###")
+    print(clustering.centroides)
+
+    df_test = pd.DataFrame(data_test, columns=["atrib1", "atrib2"])
+    print("###Dataset de test###")
+    print(df_test)
+    
+    results = clustering.predict(df_test)
+    print(results)
+    print("=========Fin Pruebas=========")
     
