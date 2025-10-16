@@ -2,6 +2,7 @@ import pandas as pd
 from utils import *
 import copy
 import distances
+import json
 
 class AgglomerativeClustering:
     def __init__(self, linkage="average", metric="euclidean", minkowski_p=3):
@@ -19,6 +20,7 @@ class AgglomerativeClustering:
         self.data_set = data_set
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
+        self.set_centroids(self.clusters)
         
         while len(self.clusters) > 1:
             distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p)
@@ -86,6 +88,24 @@ class AgglomerativeClustering:
         
     def view_dendrogram(self):
         plt_dendrogram(self.clusters_history)
+        
+    
+    def export(self):
+        if not self.centroides:
+            raise Exception("Ejecuta primero fit(dataset) antes de exportar el modelo")
+        
+        c = {k: v.tolist() for k, v in self.centroides.items()}
+        
+        data_to_export = {
+            "linkage": self.linkage,
+            "metric": self.metric,
+            "p": self.p,
+            "centroides": c
+        }
+
+        with open("./output/model.json", "w") as f:
+            json.dump(data_to_export, f, indent=4)
+            
 
 
 class ClusterNode:
@@ -146,5 +166,6 @@ if __name__ == "__main__":
     
     results = clustering.predict(df_test)
     print(results)
+    clustering.export()
     print("=========Fin Pruebas=========")
     
