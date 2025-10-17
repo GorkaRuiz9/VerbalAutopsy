@@ -3,9 +3,12 @@ from utils import *
 import copy
 import distances
 import json
+from pathlib import Path
 
 class AgglomerativeClustering:
-    def __init__(self, linkage="average", metric="euclidean", minkowski_p=3):
+    
+    def __init__(self, linkage="average", metric="euclidean", minkowski_p=3, path=None):
+        
         self.linkage = linkage
         self.metric = metric
         self.p = minkowski_p
@@ -14,9 +17,13 @@ class AgglomerativeClustering:
         self.data_set = None
         self.labels_ = None
         self.centroides = None
+        
+        if path:
+            self.load_model(path)
 
 
     def fit(self, data_set: pd.DataFrame):
+        
         self.data_set = data_set
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
@@ -50,6 +57,7 @@ class AgglomerativeClustering:
         
         
     def set_centroids(self, clusters):
+        
         centroides = {}
         for cluster in clusters:
             datos = np.array(cluster.datos)
@@ -58,6 +66,7 @@ class AgglomerativeClustering:
         return centroides
             
     def update_clusters_list(self, clusterA, clusterB, min_dist):
+        
         new_cluster = ClusterNode(clusterA, clusterB, min_dist, clusterA.datos + clusterB.datos, len(self.clusters_history))
         self.clusters.remove(clusterA)
         self.clusters.remove(clusterB)
@@ -66,6 +75,7 @@ class AgglomerativeClustering:
         
         
     def cut_tree(self, dist_to_cut):
+        
         if not self.clusters_history:
             return []
         top = self.clusters_history[-1]
@@ -91,8 +101,11 @@ class AgglomerativeClustering:
         
     
     def export(self):
+        
         if not self.centroides:
             raise Exception("Ejecuta primero fit(dataset) antes de exportar el modelo")
+        
+        print(self.centroides)
         
         c = {k: v.tolist() for k, v in self.centroides.items()}
         
@@ -106,7 +119,16 @@ class AgglomerativeClustering:
         with open("./output/model.json", "w") as f:
             json.dump(data_to_export, f, indent=4)
             
-
+    
+    def load_model(self, path):
+        
+        with open(path, "r") as f:
+            conf = json.load(f)
+            
+        self.linkage = conf["linkage"]
+        self.metric = conf["metric"]
+        self.p = conf["p"]
+        self.centroides = conf["centroides"]
 
 class ClusterNode:
     def __init__(self, left=None, right=None, distance=0.0, datos=None, id=None):
@@ -167,5 +189,8 @@ if __name__ == "__main__":
     results = clustering.predict(df_test)
     print(results)
     clustering.export()
+    
+    AgglomerativeClustering(path=Path("./output/model.json").resolve())
+    exit()
     print("=========Fin Pruebas=========")
     
