@@ -6,13 +6,33 @@ import json
 from pathlib import Path
 
 class AgglomerativeClustering:
+    """
+    Implementación personalizada de un algoritmo de clustering jerárquico aglomerativo.
+    """
     
     def __init__(self, linkage="average", metric="euclidean", minkowski_p=3, path=None):
+        
+        """
+        Inicializa el modelo de clustering jerárquico.
+
+        Parámetros:
+        -----------
+        linkage : str
+            Método de enlace usado para calcular la distancia entre clusters ('single', 'complete', 'average', 'mean').
+        metric : str
+            Métrica de distancia utilizada ('euclidean', 'manhattan', 'minkowski', 'sentence').
+        minkowski_p : int
+            Parámetro p del cálculo de la distancia de Minkowski (solo relevante si metric="minkowski").
+        path : str | None
+            Ruta a un archivo JSON que contenga un modelo previamente exportado.
+        """
         
         self.linkage = linkage
         self.metric = metric
         self.p = minkowski_p
+        # contiene la lista de cluster candidatos a funsionarse
         self.clusters = list()
+        # contiene todo los historial de clusters creados
         self.clusters_history = list()
         self.data_set = None
         self.labels_ = None
@@ -24,10 +44,18 @@ class AgglomerativeClustering:
 
     def fit(self, data_set: pd.DataFrame):
         
+        """
+        Construye el dendrograma a partir del conjunto de datos y ejecuta el proceso aglomerativo completo.
+
+        Parámetros:
+        -----------
+        data_set : pd.DataFrame
+            Dataset de entrada donde cada fila representa una instancia y cada columna un atributo.
+        """
+        
         self.data_set = data_set
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
-        self.set_centroids(self.clusters)
         
         while len(self.clusters) > 1:
             distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p)
@@ -38,6 +66,20 @@ class AgglomerativeClustering:
             
     
     def predict(self, data_set: pd.DataFrame):
+        
+        """
+        Asigna nuevas instancias a los clusters existentes según los centroides aprendidos.
+
+        Parámetros:
+        -----------
+        data_set : pd.DataFrame
+            Nuevas instancias a clasificar.
+
+        Retorna:
+        --------
+        pd.DataFrame
+            Copia del dataset con una nueva columna "cluster" que indica el identificador del cluster asignado.
+        """
         
         centroides_items = list(self.centroides.items())
         
@@ -58,14 +100,42 @@ class AgglomerativeClustering:
         
     def set_centroids(self, clusters):
         
+        """
+        Calcula los centroides de una lista de clusters.
+
+        Parámetros:
+        -----------
+        clusters : list[ClusterNode]
+            Lista de objetos ClusterNode a partir de los cuales se calcularán los centroides.
+
+        Retorna:
+        --------
+        dict
+            Diccionario {id_cluster: vector_centroide}.
+        """
+        
         centroides = {}
         for cluster in clusters:
             datos = np.array(cluster.datos)
             centroide = np.mean(datos, axis=0)
             centroides[cluster.id] = centroide
         return centroides
+       
             
     def update_clusters_list(self, clusterA, clusterB, min_dist):
+        
+        """
+        Fusiona dos clusters y actualiza las listas internas del modelo.
+
+        Parámetros:
+        -----------
+        clusterA : ClusterNode
+            Primer cluster a fusionar.
+        clusterB : ClusterNode
+            Segundo cluster a fusionar.
+        min_dist : float
+            Distancia entre ambos clusters.
+        """
         
         new_cluster = ClusterNode(clusterA, clusterB, min_dist, clusterA.datos + clusterB.datos, len(self.clusters_history))
         self.clusters.remove(clusterA)
@@ -75,6 +145,20 @@ class AgglomerativeClustering:
         
         
     def cut_tree(self, dist_to_cut):
+        
+        """
+        Realiza una poda del dendrograma a una distancia de corte específica.
+
+        Parámetros:
+        -----------
+        dist_to_cut : float
+            Distancia umbral a partir de la cual se detiene la unión de clusters.
+
+        Retorna:
+        --------
+        pd.DataFrame
+            DataFrame con las instancias originales y su cluster asignado.
+        """
         
         if not self.clusters_history:
             return []
@@ -86,6 +170,23 @@ class AgglomerativeClustering:
     
     def get_clusters(self, cluster, dist_to_cut):
         
+        """
+        Recorre recursivamente el árbol de clusters y devuelve los clusters finales 
+        tras aplicar la distancia de corte.
+
+        Parámetros:
+        -----------
+        cluster : ClusterNode
+            Nodo raíz desde el cual comenzar la búsqueda.
+        dist_to_cut : float
+            Distancia umbral para detener la expansión.
+
+        Retorna:
+        --------
+        list[ClusterNode]
+            Lista de clusters obtenidos tras la poda.
+        """
+        
         if cluster.left == None and cluster.right == None:
             return [cluster]
         if cluster.distance <= dist_to_cut:
@@ -96,16 +197,24 @@ class AgglomerativeClustering:
             clusters += self.get_clusters(cluster.right, dist_to_cut)
             return clusters
         
+        
     def view_dendrogram(self):
+        
+        """
+        Dibuja el dendrograma del clustering a partir del historial de fusiones.
+        """
+        
         plt_dendrogram(self.clusters_history)
         
     
     def export(self):
         
+        """
+        Exporta el modelo entrenado (configuración y centroides) a un archivo JSON.
+        """
+        
         if not self.centroides:
             raise Exception("Ejecuta primero fit(dataset) antes de exportar el modelo")
-        
-        print(self.centroides)
         
         c = {k: v.tolist() for k, v in self.centroides.items()}
         
@@ -122,6 +231,15 @@ class AgglomerativeClustering:
     
     def load_model(self, path):
         
+        """
+        Carga un modelo previamente exportado desde un archivo JSON.
+
+        Parámetros:
+        -----------
+        path : str
+            Ruta al archivo JSON que contiene la configuración y los centroides del modelo.
+        """
+        
         with open(path, "r") as f:
             conf = json.load(f)
             
@@ -131,7 +249,30 @@ class AgglomerativeClustering:
         self.centroides = conf["centroides"]
 
 class ClusterNode:
+    
+    """
+    Representa un nodo del árbol de clustering jerárquico.
+    """
+    
     def __init__(self, left=None, right=None, distance=0.0, datos=None, id=None):
+        
+        """
+        Inicializa un nodo del dendrograma.
+
+        Parámetros:
+        -----------
+        left : ClusterNode | None
+            Hijo izquierdo (cluster fusionado).
+        right : ClusterNode | None
+            Hijo derecho (cluster fusionado).
+        distance : float
+            Distancia a la que se fusionaron los dos clusters hijos.
+        datos : list
+            Lista de vectores (instancias) contenidos en este cluster.
+        id : int
+            Identificador único del cluster.
+        """
+        
         self.left = left          
         self.right = right        
         self.distance = distance  
