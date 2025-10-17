@@ -1,86 +1,60 @@
-import numpy as np
+# Genera embeddings médicos a partir de notas clínicas en inglés
+# usando el modelo transformer "emilyalsentzer/Bio_ClinicalBERT"
+from sentence_transformers import SentenceTransformer
 import pandas as pd
-import re
-import csv
 import os
 
-# Parámetros
-embedding_dim = 50
-window_size = 2
-learning_rate = 0.01
 
 
-
-def limpiar_texto(t):
-    t = t.lower()
-    t = re.sub(r'[^a-z\s]', ' ', t)
-    return t.split()
+MODEL_NAME = "emilyalsentzer/Bio_ClinicalBERT"  # Modelo médico
+EMBEDDING_DIM = 768  # Dimensión típica del modelo BERT-base
 
 
-def generar_embeddings(csv_path, text_col="gs_text34"):
-    """ Devuelve un diccionario {palabra: vector}."""
+def generar_embeddings_biomedico(model_name, textos):
+    #Genera embeddings de una lista de textos médicos con Bio_ClinicalBERT.
+    #Devuelve una matriz de vectores.
+
+    print(f"\nCargando modelo: {model_name}")
+    model = SentenceTransformer(model_name)
+
+    print(f"Generando embeddings para {len(textos)} instancias...")
+    embeddings = model.encode(textos, show_progress_bar=True, convert_to_numpy=True)
+    return embeddings
+
+
+def cargar_dataset(csv_path, text_col, id_col):
+    """ Carga el dataset y devuelve listas con los textos y sus IDs."""
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"Archivo no encontrado: {csv_path}")
 
     df = pd.read_csv(csv_path)
-    if text_col not in df.columns:
-        raise ValueError(f"Columna '{text_col}' no encontrada en CSV.")
 
-    texts = df[text_col].dropna().astype(str).tolist()
-    tokenized_docs = [limpiar_texto(t) for t in texts]
+    if text_col not in df.columns or id_col not in df.columns:
+        raise ValueError(f"El CSV debe contener las columnas '{id_col}' y '{text_col}'.")
 
-    vocabulario = sorted(set([word for doc in tokenized_docs for word in doc]))
-    embeddings = {word: np.random.uniform(-0.5, 0.5, embedding_dim) for word in vocabulario}
-
-    for doc in tokenized_docs:
-        for i, word in enumerate(doc):
-            context = doc[max(0, i - window_size): i] + doc[i + 1: i + 1 + window_size]
-            for c in context:
-                embeddings[word] += learning_rate * (embeddings[c] - embeddings[word])
-
-    return embeddings
+    textos = df[text_col].astype(str).fillna("").tolist()
+    ids = df[id_col].tolist()
+    return ids, textos
 
 
-def frase_a_vector(frase, embeddings, dim=50):
-    """Convierte una frase en un vector promediando los embeddings de sus palabras. Palabras desconocidas se representan con vector cero."""
-    tokens = limpiar_texto(frase)
-    vectores = []
-    for tok in tokens:
-        if tok in embeddings:
-            vectores.append(embeddings[tok])
-        else:
-            vectores.append(np.zeros(dim))
-
-    if len(vectores) == 0:
-        return np.zeros(dim)
-    else:
-        return np.mean(vectores, axis=0)
-
-
-# --- Código principal ---
+#Pruebas
 if __name__ == "__main__":
-    csv_path = "cleaned_PHMRC_VAI_redacted_free_text.train.csv"
+    # Parámetros
+    CSV_INPUT = "cleaned_PHMRC_VAI_redacted_free_text.train.csv"  # Dataset original
+    TEXT_COL = "gs_text34"
+    ID_COL = "newid"
+    OUTPUT_CSV = "instances_embeddings_Bio_ClinicalBERT.csv"
 
-    # Leer dataset
-    df = pd.read_csv(csv_path)
+    # 1. Cargar datos
+    ids, textos = cargar_dataset(CSV_INPUT, TEXT_COL, ID_COL)
 
-    # Verificar que exista la columna newid
-    if "newid" not in df.columns:
-        raise ValueError("El CSV no contiene la columna 'newid'.")
+    # 2. Generar embeddings
+    embeddings = generar_embeddings_biomedico(MODEL_NAME, textos)
 
-    # Generar embeddings de palabras
-    embeddings = generar_embeddings(csv_path)
+    # 3. Crear DataFrame con resultados
+    df_out = pd.DataFrame(embeddings)
+    df_out.insert(0, "id", ids)
 
-    # CSV de embeddings por instancia
-    output_csv_instances = "instances_embeddings.csv"
-    with open(output_csv_instances, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["newid"] + [f"dim_{i}" for i in range(embedding_dim)])
-
-        for idx, row in df.iterrows():
-            instance_id = row["newid"]
-            text = str(row["gs_text34"])  # texto de la fila
-            vector_inst = frase_a_vector(text, embeddings)
-            writer.writerow([instance_id] + vector_inst.tolist())
-
-    print(f"Embeddings de instancias guardados en '{output_csv_instances}'")
+    # 4. Guardar CSV
+    df_out.to_csv(OUTPUT_CSV, index=False)
+    print(f"\nEmbeddings guardados correctamente en '{OUTPUT_CSV}'")
