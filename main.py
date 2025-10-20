@@ -4,10 +4,9 @@ import pandas as pd
 
 
 
-#embeddings = main()
-#print(embeddings)
-df = pd.read_csv("./clustering/instances_embeddings_Bio_ClinicalBERT.csv")
-
+#embedding = embeddings("./dataset/cleaned_PHMRC_VAI_redacted_free_text.train.csv")
+#print(embedding)
+df = pd.read_csv("./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings.csv")
 cluster = AgglomerativeClustering()
 cluster.fit(df)
 clusters_result = cluster.cut_tree(500)

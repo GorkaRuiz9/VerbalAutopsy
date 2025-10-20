@@ -4,6 +4,7 @@ import copy
 import clustering.distances
 import json
 from pathlib import Path
+from tqdm import tqdm
 
 class AgglomerativeClustering:
     """
@@ -57,12 +58,22 @@ class AgglomerativeClustering:
         self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
         
+        total_clusters = len(self.clusters)
+        progress_bar = tqdm(total=total_clusters - 1, desc="Agrupando clusters")
+
+        distancias = None
+        i = j = None
+        
         while len(self.clusters) > 1:
-            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p)
+            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p, distancias, i, j)
             min_dist, (i, j) = get_min_dist(distancias)
             clusterA = self.clusters[i]
             clusterB = self.clusters[j]
             self.update_clusters_list(clusterA, clusterB, min_dist)
+            
+            progress_bar.update(1)
+
+        progress_bar.close()
             
     
     def predict(self, data_set: pd.DataFrame):
@@ -87,7 +98,7 @@ class AgglomerativeClustering:
         for i, instancia in data_set.iterrows():
             x = np.array(instancia.values, dtype=float)
             
-            distancias = [clustering.distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
+            distancias = [distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
             
             id_cluster = centroides_items[int(np.argmin(distancias))][0]
             asignaciones.append(id_cluster)
@@ -316,7 +327,7 @@ if __name__ == "__main__":
     clustering.fit(df)
 
     # Por ejemplo, cortar a distancia 5.0
-    clusters_result = clustering.cut_tree(dist_to_cut=5.0)
+    clusters_result = clustering.cut_tree(dist_to_cut=10.0)
     print("###Resultados###")
     print(clusters_result)
     print("###Centroides###")

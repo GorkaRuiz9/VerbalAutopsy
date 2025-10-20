@@ -38,12 +38,13 @@ def cargar_dataset(csv_path, text_col, id_col):
 
 
 #Pruebas
-def main():
+def embeddings(data_path):
     # Parámetros
-    CSV_INPUT = "cleaned_PHMRC_VAI_redacted_free_text.train.csv"  # Dataset original
+    f = data_path.split("/")[-1].split(".csv")[0]
+    CSV_INPUT = data_path  # Dataset original
     TEXT_COL = "gs_text34"
     ID_COL = "newid"
-    OUTPUT_CSV = "instances_embeddings_Bio_ClinicalBERT.csv"
+    OUTPUT_CSV = "./output/" + f + "_embeddings.csv"
 
     # 1. Cargar datos
     ids, textos = cargar_dataset(CSV_INPUT, TEXT_COL, ID_COL)
@@ -62,4 +63,4 @@ def main():
     return df_out
 
 if __name__ == "__main__":
-    main()
+    embeddings()
