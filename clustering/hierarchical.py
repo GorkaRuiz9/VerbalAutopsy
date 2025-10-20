@@ -1,7 +1,7 @@
 import pandas as pd
-from utils import *
+from clustering.utils import *
 import copy
-import distances
+import clustering.distances
 import json
 from pathlib import Path
 
@@ -87,7 +87,7 @@ class AgglomerativeClustering:
         for i, instancia in data_set.iterrows():
             x = np.array(instancia.values, dtype=float)
             
-            distancias = [distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
+            distancias = [clustering.distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
             
             id_cluster = centroides_items[int(np.argmin(distancias))][0]
             asignaciones.append(id_cluster)
@@ -317,11 +317,13 @@ if __name__ == "__main__":
 
     # Por ejemplo, cortar a distancia 5.0
     clusters_result = clustering.cut_tree(dist_to_cut=5.0)
+    print("###Resultados###")
+    print(clusters_result)
     print("###Centroides###")
     print(clustering.centroides)
     
     print("###Dendograma###")
-    print(clustering.view_dendrogram())    
+    clustering.view_dendrogram()    
 
     df_test = pd.DataFrame(data_test, columns=["atrib1", "atrib2"])
     print("###Dataset de test###")

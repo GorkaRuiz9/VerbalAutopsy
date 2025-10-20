@@ -38,7 +38,7 @@ def cargar_dataset(csv_path, text_col, id_col):
 
 
 #Pruebas
-if __name__ == "__main__":
+def main():
     # Parámetros
     CSV_INPUT = "cleaned_PHMRC_VAI_redacted_free_text.train.csv"  # Dataset original
     TEXT_COL = "gs_text34"
@@ -58,3 +58,8 @@ if __name__ == "__main__":
     # 4. Guardar CSV
     df_out.to_csv(OUTPUT_CSV, index=False)
     print(f"\nEmbeddings guardados correctamente en '{OUTPUT_CSV}'")
+    
+    return df_out
+
+if __name__ == "__main__":
+    main()

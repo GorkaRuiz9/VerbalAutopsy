@@ -1,7 +1,7 @@
 # Para funciones complementarias
 import numpy as np
 import pandas as pd
-from distances import inter_group_distance
+from clustering.distances import inter_group_distance
 import math
 from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
@@ -32,25 +32,11 @@ def get_results_df(clusters, data_set: pd.DataFrame):
 
     columnas = list(data_set.columns) + ["cluster"]
     df = pd.DataFrame(filas, columns=columnas)
-
-    df.insert(0, "id", None)
-    for i, row in df.iterrows():
-        # buscamos la instancia original en data_set
-        mask = (data_set == row[data_set.columns]).all(axis=1)
-        match = data_set[mask]
-        if not match.empty:
-            df.at[i, "id"] = match.index[0]
-        else:
-            df.at[i, "id"] = -1  # por si no se encuentra coincidencia exacta
-
-    df = df.sort_values(by="id").reset_index(drop=True)
     
-    print(df)
     return df
 
 def plt_dendrogram(clusters_history):
     d, n = build_linkage_matrix(clusters_history)
-    print(list(range(n)))
     dendrogram(d, labels=list(range(n)))
     plt.xlabel("Instancias originales")
     plt.ylabel("Distancia")
