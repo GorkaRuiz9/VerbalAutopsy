@@ -4,7 +4,7 @@ import pandas as pd
 from clustering.Evaluacion import *
 
 SEED = 42
-SUB_SET = 1500
+SUB_SET = 50
 
 #embedding = embeddings("./dataset/cleaned_PHMRC_VAI_redacted_free_text.train.csv")
 #print(embedding)
@@ -13,7 +13,7 @@ df = pd.read_csv("./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings
 df_reduced = df.sample(n=SUB_SET, random_state=SEED)
 cluster = AgglomerativeClustering()
 cluster.fit(df_reduced)
-cluster.view_dendrogram()
+cluster.view_dendrogram(show=True, n=SUB_SET)
 clusters_result = cluster.cut_tree(500)
 
 path = f"./output/asignacion_{cluster.linkage}_{cluster.metric}_{cluster.p}_{SUB_SET}.csv"

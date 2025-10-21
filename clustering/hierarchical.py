@@ -212,13 +212,13 @@ class AgglomerativeClustering:
             return clusters
         
         
-    def view_dendrogram(self):
+    def view_dendrogram(self, n, show=False):
         
         """
         Dibuja el dendrograma del clustering a partir del historial de fusiones.
         """
-        
-        plt_dendrogram(self.clusters_history)
+        f_name = f"dendograma_{self.linkage}_{self.metric}_{self.p}_{n}"
+        plt_dendrogram(self.clusters_history, show, self.linkage, self.metric, f_name)
         
     
     def export(self):

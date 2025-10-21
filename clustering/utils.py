@@ -47,12 +47,15 @@ def get_results_df(clusters, data_set: pd.DataFrame):
     
     return df
 
-def plt_dendrogram(clusters_history):
+def plt_dendrogram(clusters_history, show, linkage, metric, f_name):
     d, n = build_linkage_matrix(clusters_history)
     dendrogram(d, labels=list(range(n)), truncate_mode=None)
     plt.xlabel("Instancias originales")
     plt.ylabel("Distancia")
-    plt.show()
+    plt.title(f"Dendograma con {linkage} y {metric}")
+    plt.savefig(f"./output/{f_name}.png")
+    if show:
+        plt.show()
 
 def build_linkage_matrix(clusters_history):
     linkage_matrix = []
