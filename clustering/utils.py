@@ -7,23 +7,32 @@ from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
 
 
-def calcular_distancias(clusters, linkage, metric, p):
+def calcular_distancias(clusters, linkage, metric, p, distancias_prev: dict, i, j):
     
-    distancias = [[math.inf if i == j else 0.0 for i in range(len(clusters))] for j in range(len(clusters))]
+    distancias = {}
+    n = len(clusters)
+    
+    if distancias_prev == None:
+        for i in range(n):
+            for j in range(i+1, n):
+                distancias[(clusters[i].id, clusters[j].id)] = inter_group_distance(clusters[i].datos, clusters[j].datos, linkage, metric, p)
+                distancias[(clusters[j].id, clusters[i].id)] = distancias[(clusters[i].id, clusters[j].id)]
 
-    for i in range(len(clusters)):
-        for j in range(i+1, len(clusters)):
-            if i != j:
-                distancias[i][j] = distancias[j][i] = inter_group_distance(clusters[i].datos, clusters[j].datos, linkage, metric, p)
+    else:
+        distancias = distancias_prev.copy()
+        for key in distancias_prev.keys():
+            if i in key or j in key:
+                del distancias[key]
+        for k in range(n-1):
+            distancias[(clusters[k].id, clusters[-1].id)] = inter_group_distance(clusters[k].datos, clusters[-1].datos, linkage, metric, p)
+            distancias[(clusters[-1].id, clusters[k].id)] = distancias[(clusters[k].id, clusters[-1].id)]
             
     return distancias
-
             
 def get_min_dist(distancias):
-    arr = np.array(distancias)
-    i, j = np.unravel_index(np.argmin(arr), arr.shape)
-    min_dist = arr[i, j]
-    return min_dist, (i, j)
+    min_key = min(distancias, key=distancias.get)  # clave con valor mínimo
+    min_val = distancias[min_key]
+    return min_val, min_key
 
 def get_results_df(clusters, data_set: pd.DataFrame):
     filas = []
@@ -56,7 +65,7 @@ def build_linkage_matrix(clusters_history):
             j = cluster.right.id
             d = cluster.distance
             size = len(cluster.datos)
-            linkage_matrix.append([i, j, d, size])
+            linkage_matrix.append((i, j, d, size))
             cluster_sizes[cluster.id] = size
 
     return np.array(linkage_matrix), n

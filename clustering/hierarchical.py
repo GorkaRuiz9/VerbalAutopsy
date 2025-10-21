@@ -61,13 +61,19 @@ class AgglomerativeClustering:
         total_clusters = len(self.clusters)
         progress_bar = tqdm(total=total_clusters - 1, desc="Agrupando clusters")
         
+        distancias = None
+        i = j = None
+        
         while len(self.clusters) > 1:
-            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p)
+            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p, distancias, i, j)
             min_dist, (i, j) = get_min_dist(distancias)
-            clusterA = self.clusters[i]
-            clusterB = self.clusters[j]
+            for c in self.clusters:
+                if c.id == i:
+                    clusterA = c
+                if c.id == j:
+                    clusterB = c
+                    
             self.update_clusters_list(clusterA, clusterB, min_dist)
-            
             progress_bar.update(1)
 
         progress_bar.close()
