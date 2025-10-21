@@ -60,12 +60,9 @@ class AgglomerativeClustering:
         
         total_clusters = len(self.clusters)
         progress_bar = tqdm(total=total_clusters - 1, desc="Agrupando clusters")
-
-        distancias = None
-        i = j = None
         
         while len(self.clusters) > 1:
-            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p, distancias, i, j)
+            distancias = calcular_distancias(self.clusters, self.linkage, self.metric, self.p)
             min_dist, (i, j) = get_min_dist(distancias)
             clusterA = self.clusters[i]
             clusterB = self.clusters[j]
@@ -98,7 +95,7 @@ class AgglomerativeClustering:
         for i, instancia in data_set.iterrows():
             x = np.array(instancia.values, dtype=float)
             
-            distancias = [distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
+            distancias = [clustering.distances.heuclidean_distance(x, centroide) for _, centroide in centroides_items]
             
             id_cluster = centroides_items[int(np.argmin(distancias))][0]
             asignaciones.append(id_cluster)

@@ -4,7 +4,7 @@ from itertools import combinations
 from math import isclose
 
 
-from distances import heuclidean_distance, manhattan_distance, minkowski_distance, sentence_distance, inter_group_distance, intra_group_distance
+from clustering.distances import heuclidean_distance, manhattan_distance, minkowski_distance, sentence_distance, inter_group_distance, intra_group_distance
 
 
 def load_dataset(path, id_col=None, cluster_col=None):
@@ -221,10 +221,10 @@ def compute_silhouette(embeddings, labels, metric='euclidean', p=2):
 
     return float(silhouettes.mean()), silhouette_per_cluster
 
-def main():
+def get_metrics(path, metric, p, mode="mean"):
     # ---------------- Configuración ----------------
     config = {
-        "instances_path": "instances.csv",   # ruta de dataset con embeddings
+        "instances_path": path,   # ruta de dataset con embeddings
         "id_col": "id",                      # columna de ID (nombre o índice)
         "cluster_col": "cluster"             # columna de cluster (nombre o índice)
     }
@@ -243,9 +243,9 @@ def main():
     per_cluster_cohesion, cohesion_global = compute_cohesion(
         embeddings=embeddings,
         labels=labels,
-        metric="euclidean",
-        p=2,
-        mode="mean"
+        metric=metric,
+        p=p,
+        mode=mode
     )
 
     print("\n=== Cohesión por cluster ===")
@@ -268,6 +268,18 @@ def main():
     print(f"Silhouette global: {sil_global:.4f}")
     for cluster, val in sil_per_cluster.items():
         print(f"Cluster {cluster}: {val:.4f}")
+        
+    metrics = {
+        "n_instancias": len(ids),
+        "dimensiones": embeddings.shape[1],
+        "cohesion": cohesion_global,
+        "mean_pairwise_distance": separability['mean_pairwise'],
+        "min_pairwise_distance": separability['min_pairwise'],
+        "max_pairwise_distance": separability['max_pairwise'],
+        "silhouette_global": sil_global
+    }
+
+    return metrics
 
 if __name__ == "__main__":
     main()

@@ -7,36 +7,17 @@ from scipy.cluster.hierarchy import dendrogram
 import matplotlib.pyplot as plt
 
 
-def calcular_distancias(clusters, linkage, metric, p, dist_prev, i, j):
-    n = len(clusters)
-    distancias = [[math.inf for _ in range(n)] for _ in range(n)]
+def calcular_distancias(clusters, linkage, metric, p):
+    
+    distancias = [[math.inf if i == j else 0.0 for i in range(len(clusters))] for j in range(len(clusters))]
 
-    # Primera iteración: calcular todas las distancias desde cero
-    if dist_prev is None or i is None or j is None:
-        for a in range(n):
-            for b in range(a + 1, n):
-                d = inter_group_distance(clusters[a].datos, clusters[b].datos, linkage, metric, p)
-                distancias[a][b] = distancias[b][a] = d
-        return distancias
-
-    # --- Actualización incremental ---
-    # dist_prev tiene tamaño (n+1) x (n+1) porque antes había un cluster más
-    # i y j fueron eliminados, y se añadió uno nuevo al final
-
-    # Copiamos todas las distancias que siguen siendo válidas
-    idx_antiguos = [k for k in range(len(dist_prev)) if k not in (i, j)]
-    for a_new, a_old in enumerate(idx_antiguos[:-1]):  # el último índice es el nuevo cluster
-        for b_new, b_old in enumerate(idx_antiguos[:-1]):
-            if a_new != b_new:
-                distancias[a_new][b_new] = dist_prev[a_old][b_old]
-
-    # Recalcular distancias del nuevo cluster (último índice)
-    new_idx = n - 1
-    for k in range(n - 1):
-        d = inter_group_distance(clusters[new_idx].datos, clusters[k].datos, linkage, metric, p)
-        distancias[new_idx][k] = distancias[k][new_idx] = d
-
+    for i in range(len(clusters)):
+        for j in range(i+1, len(clusters)):
+            if i != j:
+                distancias[i][j] = distancias[j][i] = inter_group_distance(clusters[i].datos, clusters[j].datos, linkage, metric, p)
+            
     return distancias
+
             
 def get_min_dist(distancias):
     arr = np.array(distancias)
@@ -59,7 +40,7 @@ def get_results_df(clusters, data_set: pd.DataFrame):
 
 def plt_dendrogram(clusters_history):
     d, n = build_linkage_matrix(clusters_history)
-    dendrogram(d, labels=list(range(n)))
+    dendrogram(d, labels=list(range(n)), truncate_mode=None)
     plt.xlabel("Instancias originales")
     plt.ylabel("Distancia")
     plt.show()
