@@ -14,9 +14,9 @@ def calcular_distancias(clusters, linkage, metric, p, distancias_prev: dict, i, 
     
     if distancias_prev == None:
         for i in range(n):
+            datos_i = extraer_datos(clusters[i].datos)
             for j in range(i+1, n):
-                datos_i = extraer_datos(clusters[i].datos)
-                datos_j = extraer_datos(clusters[i].datos)
+                datos_j = extraer_datos(clusters[j].datos)
                 distancias[(clusters[i].id, clusters[j].id)] = inter_group_distance(datos_i, datos_j, linkage, metric, p)
                 distancias[(clusters[j].id, clusters[i].id)] = distancias[(clusters[i].id, clusters[j].id)]
 
@@ -83,4 +83,6 @@ def build_linkage_matrix(clusters_history):
             linkage_matrix.append((i, j, d, size))
             cluster_sizes[cluster.id] = size
 
+    print(linkage_matrix)
+    
     return np.array(linkage_matrix), n
