@@ -59,7 +59,7 @@ def get_results(clusters, data_set: pd.DataFrame):
 
 def plt_dendrogram(clusters_history, show, linkage, metric, f_name):
     d, n = build_linkage_matrix(clusters_history)
-    dendrogram(d, labels=list(range(n)), truncate_mode=None)
+    dendrogram(d, labels=list(range(n)))
     plt.xlabel("Instancias originales")
     plt.ylabel("Distancia")
     plt.title(f"Dendograma con {linkage} y {metric}")
@@ -71,7 +71,6 @@ def build_linkage_matrix(clusters_history):
     linkage_matrix = []
 
     n = next((i for i, c in enumerate(clusters_history) if len(c.datos) > 1), None)
-    print(n)
     cluster_sizes = {}
 
     for cluster in clusters_history:
@@ -82,7 +81,5 @@ def build_linkage_matrix(clusters_history):
             size = len(cluster.datos[1])
             linkage_matrix.append((i, j, d, size))
             cluster_sizes[cluster.id] = size
-
-    print(linkage_matrix)
     
     return np.array(linkage_matrix), n

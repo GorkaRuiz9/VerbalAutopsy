@@ -22,7 +22,7 @@ def generar_embeddings_biomedico(model_name, textos):
     return embeddings
 
 
-def cargar_dataset(csv_path, text_col, id_col):
+def cargar_dataset(csv_path, text_col, id_col, label_col):
     """ Carga el dataset y devuelve listas con los textos y sus IDs."""
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"Archivo no encontrado: {csv_path}")
@@ -34,7 +34,8 @@ def cargar_dataset(csv_path, text_col, id_col):
 
     textos = df[text_col].astype(str).fillna("").tolist()
     ids = df[id_col].tolist()
-    return ids, textos
+    labels = df[label_col].tolist()
+    return ids, textos, labels
 
 
 #Pruebas
@@ -42,12 +43,13 @@ def embeddings(data_path):
     # Parámetros
     f = data_path.split("/")[-1].split(".csv")[0]
     CSV_INPUT = data_path  # Dataset original
-    TEXT_COL = "gs_text34"
+    TEXT_COL = "open_response"
     ID_COL = "newid"
+    LABEL_COL = "gs_text34"
     OUTPUT_CSV = "./output/" + f + "_embeddings.csv"
 
     # 1. Cargar datos
-    ids, textos = cargar_dataset(CSV_INPUT, TEXT_COL, ID_COL)
+    ids, textos, labels = cargar_dataset(CSV_INPUT, TEXT_COL, ID_COL, LABEL_COL)
 
     # 2. Generar embeddings
     embeddings = generar_embeddings_biomedico(MODEL_NAME, textos)
@@ -55,6 +57,7 @@ def embeddings(data_path):
     # 3. Crear DataFrame con resultados
     df_out = pd.DataFrame(embeddings)
     df_out.insert(0, "id", ids)
+    df_out["gs_text34"] = labels
 
     # 4. Guardar CSV
     df_out.to_csv(OUTPUT_CSV, index=False)

@@ -4,4 +4,6 @@
 
 - añadir tipo de distancia al dendograma
 - añadir mapeo de id_inst a cluster
-- 
+
+- guardar resultados del test
+- crear y guardar mapeo de etiquetas
