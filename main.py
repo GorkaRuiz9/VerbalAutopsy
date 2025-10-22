@@ -4,11 +4,12 @@ import pandas as pd
 from clustering.Evaluacion import *
 from itertools import product
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 
 # para la reproducibilidad
 SEED = 42
 # tamaño del set que se va a procesar
-SUB_SET = 1500
+SUB_SET = 100
 
 embeddings_file = "./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings.csv"
 file_exists = os.path.isfile(embeddings_file)
@@ -38,8 +39,23 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
     print(f"\n[INFO] Ejecutando experimento con linkage={linkage}, metric={metric}, p={p}, pca={n_pca}, poda={poda}")
 
     try:
-        
-        # añadir dimensionalidad con pca
+
+        #Separar ids y embeddings originales
+        ids = X_train["id"].reset_index(drop=True)
+        embeddings_df = X_train.drop(columns=["id"])  #DataFrame con sólo atributos
+
+        #Aplicar PCA si procede
+        if n_pca is not None and int(n_pca) > 0:
+            print(f"[INFO] Aplicando PCA con {n_pca} componentes")
+            pca = PCA(n_components=int(n_pca))
+            X_pca_array = pca.fit_transform(embeddings_df.values) 
+            #Reconstruir DataFrame con ids + componentes principales
+            comp_cols = [f"pc_{i}" for i in range(X_pca_array.shape[1])]
+            X_reduced = pd.DataFrame(X_pca_array, columns=comp_cols)
+            X_reduced.insert(0, "id", ids)
+        else:
+            #no aplicar PCA: conservar formato (id + embeddings)
+            X_reduced = pd.concat([ids, embeddings_df.reset_index(drop=True)], axis=1)
         
         cluster = AgglomerativeClustering(
             linkage=linkage,
@@ -47,8 +63,8 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
             minkowski_p=p
         )
 
-        cluster.fit(X_train)
-        cluster.view_dendrogram(show=False, n=len(X_train))
+        cluster.fit(X_reduced)
+        cluster.view_dendrogram(show=False, n=len(X_reduced))
         clusters_result = cluster.cut_tree(poda)
 
         asign_path = f"./output/asignacion_{linkage}_{metric}_p{p}_pca{n_pca}_poda{poda}.csv"
