@@ -59,6 +59,8 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         metrics["pca"] = n_pca
         metrics["poda"] = poda
         # falta añadir metricas externas con y_train ["id", "label"]
+        # clusters_result tiene formato ["id", "embeddings", "cluster"]
+        # el id de y_train y de clusters_result es el mismo
 
         pd.DataFrame([metrics]).to_csv(output_file, index=False, mode="a", header=not file_exists)
         file_exists = True
