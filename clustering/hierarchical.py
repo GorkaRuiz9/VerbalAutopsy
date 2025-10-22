@@ -57,9 +57,9 @@ class AgglomerativeClustering:
         self.data_set = data_set
         
         ids = self.data_set["id"]
-        embegginds = self.data_set.drop(columns=["id"])
+        embeddinds = self.data_set.drop(columns=["id"])
         
-        self.clusters = [ClusterNode(datos=[[ids.values[i],dato]], id=i) for i, dato in enumerate(embegginds.values)]
+        self.clusters = [ClusterNode(datos=[[ids.values[i],dato]], id=i) for i, dato in enumerate(embeddinds.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
         
         total_clusters = len(self.clusters)

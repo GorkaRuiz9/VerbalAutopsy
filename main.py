@@ -22,7 +22,7 @@ metrics_list = ['euclidean']
 linkage_list = ['single']
 p_list = [1]
 pca_list = [50]
-poda_list = [60]
+poda_list = [6]
 
 output_file = "./output/metrics.csv"
 file_exists = os.path.isfile(output_file)
