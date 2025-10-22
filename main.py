@@ -39,6 +39,8 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
 
     try:
         
+        # añadir dimensionalidad con pca
+        
         cluster = AgglomerativeClustering(
             linkage=linkage,
             metric=metric,
