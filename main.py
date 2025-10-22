@@ -4,7 +4,7 @@ import pandas as pd
 from clustering.Evaluacion import *
 
 SEED = 42
-SUB_SET = 50
+SUB_SET = 1000
 
 #embedding = embeddings("./dataset/cleaned_PHMRC_VAI_redacted_free_text.train.csv")
 #print(embedding)
