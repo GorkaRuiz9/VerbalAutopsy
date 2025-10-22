@@ -6,7 +6,6 @@ from itertools import product
 
 # para la reproducibilidad
 SEED = 42
-
 # tamaño del set que se va a procesar
 SUB_SET = 1000
 

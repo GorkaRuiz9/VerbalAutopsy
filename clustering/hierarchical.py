@@ -55,7 +55,11 @@ class AgglomerativeClustering:
         """
         
         self.data_set = data_set
-        self.clusters = [ClusterNode(datos=[dato], id=i) for i, dato in enumerate(data_set.values)]
+        
+        ids = self.data_set["id"]
+        embegginds = self.data_set.drop(columns=["id"])
+        
+        self.clusters = [ClusterNode(datos=[[ids.values[i],dato]], id=i) for i, dato in enumerate(embegginds.values)]
         self.clusters_history = copy.deepcopy(self.clusters)
         
         total_clusters = len(self.clusters)
@@ -130,7 +134,7 @@ class AgglomerativeClustering:
         
         centroides = {}
         for cluster in clusters:
-            datos = np.array(cluster.datos)
+            datos = extraer_datos(cluster.datos)
             centroide = np.mean(datos, axis=0)
             centroides[cluster.id] = centroide
         return centroides
@@ -179,7 +183,7 @@ class AgglomerativeClustering:
         top = self.clusters_history[-1]
         clusters = self.get_clusters(top, dist_to_cut)
         self.centroides = self.set_centroids(clusters)
-        return get_results_df(clusters, self.data_set)
+        return get_results(clusters, self.data_set)
     
     
     def get_clusters(self, cluster, dist_to_cut):
