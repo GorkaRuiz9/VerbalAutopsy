@@ -256,7 +256,6 @@ def get_metrics(path, metric, p, mode="mean"):
 
     # ---------------- Separabilidad ----------------
     separability = compute_separability(embeddings, labels, metric="euclidean", linkage='mean')
-
     print("\n=== Separabilidad entre clusters ===")
     print(f"n_clusters = {separability['k']}, mean pairwise distance = {separability['mean_pairwise']:.4f}")
     print(f"min = {separability['min_pairwise']:.4f}, max = {separability['max_pairwise']:.4f}")
