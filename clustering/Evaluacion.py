@@ -225,7 +225,7 @@ def get_metrics(path, metric, p, mode="mean"):
     # ---------------- Configuración ----------------
     config = {
         "instances_path": path,   # ruta de dataset con embeddings
-        "id_col": "id",                      # columna de ID (nombre o índice)
+        "id_col": "newid",                      # columna de ID (nombre o índice)
         "cluster_col": "cluster"             # columna de cluster (nombre o índice)
     }
 

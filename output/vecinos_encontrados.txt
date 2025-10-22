@@ -1,0 +1,16 @@
+Texto de entrada:
+He felt a strong pain in the chest and had difficulty breathing. Blood pressure was high and pulse was rapid.
+
+Vecinos más cercanos:
+ID: 2515
+Cluster: 2998
+Etiqueta real: Stillbirth
+Distancia: 3.9526
+Texto: before # days of delivery a daai nurse told the lady that may be baby died in the womb during labour pain fluid was coming out which was smelling lady did not had any other problem lady had little pain in night which increased in the morning then she was brought to the hospital where she delivered a dead baby at # am skin was leaving the body of baby
+
+ID: 2440
+Cluster: 2998
+Etiqueta real: Falls
+Distancia: 3.9643
+Texto: june # year got an accident in the morning he fell and was dragged by a horse has wounded on hid head brought immediately to hospital the put oxygen and iv fluid then the referred it to hospital place as per respondent the doctor hospital told them that the deceased has hemorrhage head june # year died around # # in the morning as per respondent the deceased didn't suffer any illness
+
