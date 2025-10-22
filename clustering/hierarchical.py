@@ -14,7 +14,7 @@ class AgglomerativeClustering:
     def __init__(self, linkage="average", metric="euclidean", minkowski_p=3, path=None):
         
         """
-        Inicializa el modelo de clustering jerárquico.
+        Inicializa el modelo de cluste  ring jerárquico.
 
         Parámetros:
         -----------
@@ -36,7 +36,6 @@ class AgglomerativeClustering:
         # contiene todo los historial de clusters creados
         self.clusters_history = list()
         self.data_set = None
-        self.labels_ = None
         self.centroides = None
         
         if path:
