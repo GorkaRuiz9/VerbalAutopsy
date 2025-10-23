@@ -126,6 +126,20 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         file_exists = True
         
         # falta añadir evaluación de test con x_test e y_test
+        X_test = X_train # QUITAR CUANDO SE HAGA EL SPLIT
+        
+        ids = X_test["id"].reset_index(drop=True)
+        embeddings_df = X_test.drop(columns=["id"])
+        
+        X_pca_array = pca.transform(embeddings_df.values)
+        
+        comp_cols = [f"pc_{i}" for i in range(X_pca_array.shape[1])]
+        X_reduced = pd.DataFrame(X_pca_array, columns=comp_cols)
+            
+        asignaciones = cluster.predict(X_reduced)
+        print(asignaciones)
+        asignaciones.insert(0, "id", ids)
+        asignaciones.to_csv("./output/prueba_predict", index=False)
 
     except Exception as e:
         print(f"[ERROR] Falló el experimento con linkage={linkage}, metric={metric}, p={p}, pca={n_pca}, poda={poda}")
