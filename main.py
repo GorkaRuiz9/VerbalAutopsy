@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 import traceback
 import joblib
+from sklearn.preprocessing import MinMaxScaler
+from clustering.best_model_export import train_and_export_best_model
 
 # para la reproducibilidad
 SEED = 42
@@ -24,13 +26,13 @@ df_reduced = df.sample(n=SUB_SET, random_state=SEED)
 
 x = df_reduced.drop("gs_text34", axis=1)
 y = df_reduced["gs_text34"]
-#X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=42)
-#y_train["id"] = X_train["id"]
-#y_test["id"] = X_test["id"]
-
-X_train = x.reset_index(drop=True)
-y_train = y.reset_index(drop=True)
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=42)
 y_train["id"] = X_train["id"]
+y_test["id"] = X_test["id"]
+
+#X_train = x.reset_index(drop=True)
+#y_train = y.reset_index(drop=True)
+#y_train["id"] = X_train["id"]
 
 
 # definimos el dominio de los experimentos
@@ -112,21 +114,18 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
 
         # extraer métricas resumidas (sin los DataFrames internos)
         external_metrics = {
-            "ARI": external_res["ARI"],
-            "NMI": external_res["NMI"],
-            "FMI": external_res["FMI"],
-            "Purity": external_res["Purity"],
-            "Hungarian_accuracy": external_res["Hungarian_accuracy"]
+            "ARI_Train": external_res["ARI"],
+            "NMI_Train": external_res["NMI"],
+            "FMI_Train": external_res["FMI"],
+            "Purity_Train": external_res["Purity"],
+            "Hungarian_accuracy_Train": external_res["Hungarian_accuracy"]
         }
 
         metrics.update(external_metrics)
 
 
-        pd.DataFrame([metrics]).to_csv(output_file, index=False, mode="a", header=not file_exists)
-        file_exists = True
         
         # falta añadir evaluación de test con x_test e y_test
-        X_test = X_train # QUITAR CUANDO SE HAGA EL SPLIT
         
         ids = X_test["id"].reset_index(drop=True)
         embeddings_df = X_test.drop(columns=["id"])
@@ -139,7 +138,37 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         asignaciones = cluster.predict(X_reduced)
         print(asignaciones)
         asignaciones.insert(0, "id", ids)
+        asignaciones= asignaciones.rename(columns={"id": "newid"})
         asignaciones.to_csv("./output/prueba_predict", index=False)
+
+        asign_path_test = "./output/prueba_predict"
+        original_labels_file = "clustering/CSV_Original.csv"
+
+        # fusionar etiquetas reales y clusters del test
+        true_labels_test, cluster_labels_test, merged_df_test = merge_labels_and_clusters(
+            path_labels=original_labels_file,
+            path_clusters=asign_path_test,
+            id_col='newid',               
+            true_col='gs_text34',      
+            cluster_col='cluster'      
+        )
+
+        # calcular métricas externas en test
+        external_res_test = external_evaluation(true_labels_test, cluster_labels_test)
+
+        external_metrics_test = {
+            "ARI_test": external_res_test["ARI"],
+            "NMI_test": external_res_test["NMI"],
+            "FMI_test": external_res_test["FMI"],
+            "Purity_test": external_res_test["Purity"],
+            "Hungarian_accuracy_test": external_res_test["Hungarian_accuracy"]
+        }
+
+        # añadir métricas de test al diccionario actual
+        metrics.update(external_metrics_test)
+
+        pd.DataFrame([metrics]).to_csv(output_file, index=False, mode="a", header=not file_exists)
+        file_exists = True
 
     except Exception as e:
         print(f"[ERROR] Falló el experimento con linkage={linkage}, metric={metric}, p={p}, pca={n_pca}, poda={poda}")
@@ -147,4 +176,4 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         traceback.print_exc()
         continue
 
-print("\n✅ Todos los experimentos completados.")
+train_and_export_best_model(metrics_path="./output/metrics.csv",embeddings_path="./dataset/cleaned_PHMRC_VAI_redacted_free_text.train.csv")
