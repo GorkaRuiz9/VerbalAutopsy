@@ -19,9 +19,8 @@ def train_and_export_best_model(metrics_path="./output/metrics.csv",
         # Crear carpeta de salida de gráficos
         os.makedirs("./output/plots", exist_ok=True)
 
-        # ============================
-        # 1️⃣ CARGA Y CÁLCULO DE SCORES
-        # ============================
+        
+        #  CARGA Y CÁLCULO DE SCORES
         df = pd.read_csv(metrics_path)
         df["cohesion_inv"] = -df["cohesion"]
         internal_metrics = ["cohesion_inv", "silhouette_global"]
@@ -41,9 +40,9 @@ def train_and_export_best_model(metrics_path="./output/metrics.csv",
         print("\nMejor combinación encontrada:")
         print(best_row[["linkage", "metric", "p", "pca", "poda", "GlobalScore"]])
 
-        # ============================
-        # 2️⃣ GRÁFICOS GlobalScore vs cada hiperparámetro
-        # ============================
+        
+        #  GRÁFICOS GlobalScore vs cada hiperparámetro
+       
         hiperparametros = ["linkage", "metric", "pca", "poda"]
 
         external_train_cols = [c for c in df.columns if c.endswith("_Train")]
