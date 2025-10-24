@@ -14,7 +14,7 @@ from clustering.best_model_export import train_and_export_best_model
 # para la reproducibilidad
 SEED = 42
 # tamaño del set que se va a procesar
-SUB_SET = 100
+SUB_SET = 1500
 
 embeddings_file = "./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings.csv"
 file_exists = os.path.isfile(embeddings_file)
@@ -36,11 +36,11 @@ y_test["id"] = X_test["id"]
 
 
 # definimos el dominio de los experimentos
-metrics_list = ['euclidean']
-linkage_list = ['single']
+metrics_list = ['euclidean', 'manhattan', 'minkowski', 'sentence']
+linkage_list = ['single', 'complete', 'average', 'mean']
 p_list = [1]
-pca_list = [50]
-poda_list = [4]
+pca_list = [600,450,300,150]
+poda_list = [4, 4.3, 4.6]
 
 output_file = "./output/metrics.csv"
 file_exists = os.path.isfile(output_file)
@@ -92,7 +92,7 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         metrics["p"] = p
         metrics["pca"] = n_pca
         metrics["poda"] = poda
-        # falta añadir metricas externas con y_train ["id", "label"]
+       
         # clusters_result tiene formato ["id", "embeddings", "cluster"]
         # el id de y_train y de clusters_result es el mismo
 
@@ -125,7 +125,7 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
 
 
         
-        # falta añadir evaluación de test con x_test e y_test
+       
         
         ids = X_test["id"].reset_index(drop=True)
         embeddings_df = X_test.drop(columns=["id"])

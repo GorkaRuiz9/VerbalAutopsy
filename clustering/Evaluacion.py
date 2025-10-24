@@ -79,26 +79,28 @@ def compute_cohesion(embeddings, labels, metric='euclidean', p=2, mode='mean'):
         'pairs' -> promedio entre todas las parejas del cluster
         'max'   -> distancia máxima interna (diámetro del cluster)
     """
+    # Se identifican los clusters únicos y se inicializan estructuras para guardar resultados
     unique_clusters = np.unique(labels)
     per_cluster = {}
     total_weighted_sum = 0.0
     total_points = embeddings.shape[0]
-
+    # Se recorre cada cluster para calcular su cohesión individual
     for cluster in unique_clusters:
         mask = (labels == cluster)
         cluster_points = embeddings[mask]
 
         if len(cluster_points) == 0:
             continue
-
+        # Cálculo de la cohesión del cluster mediante la función intra_group_distance()
         cohesion_value = intra_group_distance(cluster_points, metric=metric, p=p, mode=mode)
+        # Se almacena el tamaño del cluster y su cohesión
         per_cluster[cluster] = {
             "size": len(cluster_points),
             "cohesion": float(cohesion_value)
         }
-
+        # Acumulación ponderada para el cálculo de cohesión global
         total_weighted_sum += cohesion_value * len(cluster_points)
-
+    # Se obtiene la cohesión promedio global
     overall = total_weighted_sum / total_points if total_points > 0 else 0.0
 
     return per_cluster, overall

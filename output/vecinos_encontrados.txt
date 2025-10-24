@@ -1,16 +1,16 @@
 Texto de entrada:
-He felt a strong pain in the chest and had difficulty breathing. Blood pressure was high and pulse was rapid.
+patient had been suffering form sickness for the last fifteen days she was taking tablets and stayed at home she had been ill from the last two years we at first took her to hospital that is in place from there they referred her to hospital there they gave her the treatment they also gave her tablets and injection and did citiscan test they had discharged her after two days she was doing fine after she came home one year later we admitted her in hospital that is in place fro five days we got her ecg done there also they discharged her after giving the treatment we continued using the same prescribed medicines on # # year when patient got fits we took her to hospital that is in place they treated her for ten minutes there and told us to take her to hospital so we took her to hospital where she was admitted but patient finally died at # # in hospital
 
 Vecinos más cercanos:
-ID: 2515
-Cluster: 2998
-Etiqueta real: Stillbirth
-Distancia: 3.9526
-Texto: before # days of delivery a daai nurse told the lady that may be baby died in the womb during labour pain fluid was coming out which was smelling lady did not had any other problem lady had little pain in night which increased in the morning then she was brought to the hospital where she delivered a dead baby at # am skin was leaving the body of baby
+ID: 453
+Cluster: 631
+Etiqueta real: Pneumonia
+Distancia: 2.1346
+Texto: # months after patient was born she had pneumonia she started to have the sickness when her one lung was not working first we went to doctor he told us to use the medicines we used it for one week we went for her x ray when he saw her x ray he said that her conditon was not well and told us admit in a hospital finally we went to the hospital through someone we know when her x ray was taken the doctor told us to take the baby to the hospital we admitted the baby in the hospital after the admission we were there for # days in january then we were there for # week in february we had the treatment on our own in the house when she had more fever and cold we went to the hospital again we were there for # days early in the morning she died
 
-ID: 2440
-Cluster: 2998
-Etiqueta real: Falls
-Distancia: 3.9643
-Texto: june # year got an accident in the morning he fell and was dragged by a horse has wounded on hid head brought immediately to hospital the put oxygen and iv fluid then the referred it to hospital place as per respondent the doctor hospital told them that the deceased has hemorrhage head june # year died around # # in the morning as per respondent the deceased didn't suffer any illness
+ID: 115
+Cluster: 127
+Etiqueta real: Stroke
+Distancia: 2.1443
+Texto: right leg hand and throat were affected by paralysis # years ago since then he was suffering a lot intermittently he used to suffer with dyspenea and used to labor for breathing because of the severe throat problem he used to suffer severely during intake of food he had rashes on the body and itching problem was also severe again a week ago bp levels imperiously soared to # and it did not drop leading him to deep coma and finally to his death
 
