@@ -92,7 +92,7 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         metrics["p"] = p
         metrics["pca"] = n_pca
         metrics["poda"] = poda
-        # falta añadir metricas externas con y_train ["id", "label"]
+       
         # clusters_result tiene formato ["id", "embeddings", "cluster"]
         # el id de y_train y de clusters_result es el mismo
 
@@ -125,7 +125,7 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
 
 
         
-        # falta añadir evaluación de test con x_test e y_test
+       
         
         ids = X_test["id"].reset_index(drop=True)
         embeddings_df = X_test.drop(columns=["id"])
