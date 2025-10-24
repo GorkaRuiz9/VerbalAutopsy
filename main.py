@@ -139,9 +139,9 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         print(asignaciones)
         asignaciones.insert(0, "id", ids)
         asignaciones= asignaciones.rename(columns={"id": "newid"})
-        asignaciones.to_csv("./output/prueba_predict", index=False)
+        asignaciones.to_csv("./output/predict.csv", index=False)
 
-        asign_path_test = "./output/prueba_predict"
+        asign_path_test = "./output/predict.csv"
         original_labels_file = "clustering/CSV_Original.csv"
 
         # fusionar etiquetas reales y clusters del test
