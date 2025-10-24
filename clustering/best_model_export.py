@@ -22,8 +22,8 @@ def train_and_export_best_model(metrics_path="./output/metrics.csv",
         
         #  CARGA Y CÁLCULO DE SCORES
         df = pd.read_csv(metrics_path)
-        df["cohesion_inv"] = -df["cohesion"]
-        internal_metrics = ["cohesion_inv", "silhouette_global"]
+       
+        internal_metrics = ["silhouette_global"]
 
         scaler = MinMaxScaler()
         df[internal_metrics] = scaler.fit_transform(df[internal_metrics])
