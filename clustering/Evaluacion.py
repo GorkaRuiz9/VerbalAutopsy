@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 from itertools import combinations
 from math import isclose
+from tqdm import tqdm
 
 
 from clustering.distances import heuclidean_distance, manhattan_distance, minkowski_distance, sentence_distance, inter_group_distance, intra_group_distance
+from clustering.hierarchical import AgglomerativeClustering
 
 
-def load_dataset(path, id_col=None, cluster_col=None):
+def load_dataset(df, path, id_col=None, cluster_col=None):
     """
     Carga un dataset con embeddings y etiquetas de cluster.
 
@@ -29,8 +31,9 @@ def load_dataset(path, id_col=None, cluster_col=None):
     embeddings : np.ndarray
         Matriz con los embeddings (solo columnas numéricas relevantes).
     """
-
-    df = pd.read_csv(path)
+    if path:
+        df = pd.read_csv(path)
+    
 
     # Convertir nombres de columna a índices si hace falta
     if isinstance(id_col, str):
@@ -221,7 +224,7 @@ def compute_silhouette(embeddings, labels, metric='euclidean', p=2):
 
     return float(silhouettes.mean()), silhouette_per_cluster
 
-def get_metrics(path, metric, p, mode="mean"):
+def get_metrics(df, path, metric, p, mode="mean"):
     # ---------------- Configuración ----------------
     config = {
         "instances_path": path,   # ruta de dataset con embeddings
@@ -231,6 +234,7 @@ def get_metrics(path, metric, p, mode="mean"):
 
     # ---------------- Carga de datos ----------------
     ids, labels, embeddings = load_dataset(
+        df = df,
         path=config["instances_path"],
         id_col=config["id_col"],
         cluster_col=config["cluster_col"]
@@ -280,5 +284,54 @@ def get_metrics(path, metric, p, mode="mean"):
 
     return metrics
 
-if __name__ == "__main__":
-    main()
+
+def consistency_test(embeddings="./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings.csv"):
+    
+    """
+    Evalúa la consistencia del clustering jerárquico al repetirlo varias veces
+    con muestras aleatorias del dataset de embeddings.
+
+    Parámetros:
+    -----------
+    embeddings_path : str
+        Ruta al CSV con los embeddings
+
+    Salidas:
+    --------
+    Imprime la media y desviación estándar del coeficiente de Silhouette
+    obtenido en 10 ejecuciones.
+    """
+    
+    valores = []
+    df = pd.read_csv(embeddings)
+    print("--- Iniciando test de consistencia (10 repeticiones) ---\n")
+    progress_bar = tqdm(total=10, desc="Agrupando clusters")
+    for i in range(10):
+        
+        df_reduced = df.sample(n=1000)
+        x = df_reduced.drop("gs_text34", axis=1).rename(columns={"newid": "id"})
+        
+        cluster = AgglomerativeClustering(
+                linkage='complete',
+                metric='euclidean',
+            )
+        
+        cluster.fit(x)
+        clusters_result = cluster.cut_tree(5.2)
+        clusters_result = clusters_result.rename(columns={"id": "newid"})
+        metrics = get_metrics(clusters_result, path=None, p=None, metric='euclidean', mode="mean")
+        valores.append(metrics["silhouette_global"])
+        
+        print(f"Iteración {i+1}: silhouette = {metrics['silhouette_global']:.4f}")
+        progress_bar.update(1)
+
+    progress_bar.close()
+        
+    avg = np.mean(valores)
+    std = np.std(valores)
+        
+    print("---Resultados del test de consistencia---")
+    print("Silhouette")
+    print(f"avg: {avg} desv: {std}")
+    
+    

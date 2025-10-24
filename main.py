@@ -26,7 +26,7 @@ df_reduced = df.sample(n=SUB_SET, random_state=SEED)
 
 x = df_reduced.drop("gs_text34", axis=1)
 y = df_reduced["gs_text34"]
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=SEED)
 y_train["id"] = X_train["id"]
 y_test["id"] = X_test["id"]
 
@@ -86,7 +86,7 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         clusters_result = clusters_result.rename(columns={"id": "newid"})
         clusters_result.to_csv(asign_path, index=False)
 
-        metrics = get_metrics(asign_path, metric, p, mode="mean")
+        metrics = get_metrics(path=asign_path, metric=metric, p=p, mode="mean", df=None)
         metrics["linkage"] = linkage
         metrics["metric"] = metric
         metrics["p"] = p
@@ -177,3 +177,5 @@ for metric, linkage, p, n_pca, poda in product(metrics_list, linkage_list, p_lis
         continue
 
 train_and_export_best_model(metrics_path="./output/metrics.csv",embeddings_path="./dataset/cleaned_PHMRC_VAI_redacted_free_text.train.csv")
+
+consistency_test("./output/cleaned_PHMRC_VAI_redacted_free_text.train_embeddings.csv")
