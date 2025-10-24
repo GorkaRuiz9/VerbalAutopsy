@@ -333,5 +333,6 @@ def consistency_test(embeddings="./output/cleaned_PHMRC_VAI_redacted_free_text.t
     print("---Resultados del test de consistencia---")
     print("Silhouette")
     print(f"avg: {avg} desv: {std}")
+
     
     
