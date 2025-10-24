@@ -6,11 +6,11 @@ from embeddings import embeddings
 from sklearn.metrics.pairwise import euclidean_distances
 
 # --- Configuración ---
-csv_embeddings_file = "../output/asignacion_single_euclidean_p1_pca50_poda4.csv"
+csv_embeddings_file = "../output/asignacion_complete_manhattan_p1_pca150_poda4.6.csv"
 csv_original_file = "CSV_Original.csv"  # ya estás dentro de clustering/
 texto_col = "open_response"
 label_col = "gs_text34"
-pca_model_path = "../output/pca_model.pkl"
+pca_model_path = "../output/pca_model_pca150.pkl"
 num_vecinos = 2
 output_txt_file = "../output/vecinos_encontrados.txt"
 
@@ -91,7 +91,7 @@ def buscar_vecinos(texto_input, embeddings_array, ids, clusters, csv_original_fi
     return vecinos
 
 # --- Ejemplo de uso ---
-texto = "He felt a strong pain in the chest and had difficulty breathing. Blood pressure was high and pulse was rapid."
+texto = "patient had been suffering form sickness for the last fifteen days she was taking tablets and stayed at home she had been ill from the last two years we at first took her to hospital that is in place from there they referred her to hospital there they gave her the treatment they also gave her tablets and injection and did citiscan test they had discharged her after two days she was doing fine after she came home one year later we admitted her in hospital that is in place fro five days we got her ecg done there also they discharged her after giving the treatment we continued using the same prescribed medicines on # # year when patient got fits we took her to hospital that is in place they treated her for ten minutes there and told us to take her to hospital so we took her to hospital where she was admitted but patient finally died at # # in hospital"
 vecinos = buscar_vecinos(texto, embeddings_array, ids, clusters, csv_original_file, pca_model)
 
 print("\nVecinos más cercanos encontrados:\n")
